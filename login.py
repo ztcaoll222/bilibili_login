@@ -5,7 +5,6 @@ from PIL import Image
 import rsa
 import binascii
 from bs4 import BeautifulSoup
-import pickle
 
 class fuck_bilibili():
     def __init__(self):
@@ -19,7 +18,7 @@ class fuck_bilibili():
         self.pwd = ''
         self.postdata = {}
         self.errorSum = 10
-        self.userName = ''
+        self.userData = {}
 
     def init(self):
         url = 'https://passport.bilibili.com/login'
@@ -37,6 +36,7 @@ class fuck_bilibili():
                 exit(1)
 
         self.readConfig()
+        self.readCookies()
 
     def readConfig(self):
         filename = 'config.json'
@@ -86,13 +86,31 @@ class fuck_bilibili():
 
         self.errorSum = 10
 
-    def loadCookies(self):
+    def readCookies(self):
         filename = "%s.cookies" % self.userid
         try:
-            with open(filename) as f:
-                self.session.cookies = requests.utils.cookiejar_from_dict(pickle.loads(f))
+            with open(filename, 'r') as f:
+                self.session.cookies.update(json.loads(f.read()))
         except IOError as e:
             print("%s\n无法加载 '%s', 将重新保存 '%s'..." % (e, filename, filename))
+        except json.decoder.JSONDecodeError as e:
+            print("%s\n无法加载 '%s', 将重新保存 '%s'..." % (e, filename, filename))
+
+    def saveCooktes(self):
+        filename = "%s.cookies" % self.userid
+        try:
+            with open(filename, 'w') as f:
+                f.write(json.dumps(self.session.cookies.get_dict()))
+                self.errorSum = 10
+        except IOError as e:
+            self.errorSum -= 1
+            if self.errorSum:
+                print("%s\n无法保存 '%s', 重试..." % (e, filename))
+                time.sleep(1)
+                return self.writeConfig()
+            else:
+                print("\n无法保存 '%s', 超过重试次数，请手动重试!" % filename)
+                exit(1)
 
     def rsaEncrypt(self):
         url = 'http://passport.bilibili.com/login?act=getkey'
@@ -201,7 +219,7 @@ class fuck_bilibili():
             print("登陆成功!")
             return True
 
-    def getAccountName(self):
+    def getAccountInfo(self):
         url = 'https://account.bilibili.com/home/userInfo'
 
         try:
@@ -214,7 +232,7 @@ class fuck_bilibili():
             s = s.replace('\r', '')
             s = s.replace(' ', '')
             s = s.replace('\t', '')
-            self.userName = json.loads(s)['data']['uname']
+            self.userData = json.loads(s)
         except requests.exceptions.ConnectionError as e:
             self.errorSum -= 1
             if self.errorSum:
@@ -228,12 +246,62 @@ class fuck_bilibili():
             print("%s无法加载用户信息, 请手动检查!")
             exit(1)
 
-    def saveCooktes(self):
-        pass
-
-    def Login(self):
-        if self.login():
-            self.getAccountName()
-            print("欢迎 %s!" % self.userName)
+    def isLogin(self):
+        self.getAccountInfo()
+        if -101 == self.userData['code']:
+            return False
         else:
-            return self.Login()
+            return True
+
+    def Login(self, isReSet):
+        if isReSet:
+            self.init()
+
+        if self.isLogin():
+            print("欢迎 %s!" % self.userData['data']['uname'])
+        else:
+            if self.login():
+                self.getAccountInfo()
+                self.saveCooktes()
+                print("欢迎 %s!" % self.userData['data']['uname'])
+            else:
+                return self.Login(isReSet)
+
+    def sign(self):
+        url = 'http://live.bilibili.com/sign/doSign'
+        try:
+            signResponse = self.session.get(url)
+            self.errorSum = 10
+            soup = BeautifulSoup(signResponse.content, 'lxml')
+            s = str(soup)
+            s = s.replace('<html><body><p>', '')
+            s = s.replace('</p></body></html>', '')
+            s = s.replace('\n', '')
+            s = s.replace('\r', '')
+            s = s.replace(' ', '')
+            s = s.replace('\t', '')
+            data = json.loads(s)
+            if 'OK' == data['msg']:
+                print("签到成功, %s" % data['data']['text'])
+                print(data['data']['specialText'])
+            else:
+                print("签到失败, %s!" % data['msg'])
+        except requests.exceptions.ConnectionError as e:
+            self.errorSum -= 1
+            if self.errorSum:
+                print("%s\n无法连接 '%s', 重试..." % (e, url))
+                time.sleep(1)
+                return self.init()
+            else:
+                print("\n无法连接 '%s', 超过重试次数, 请手动重试!" % url)
+                exit(1)
+
+    def Sign(self):
+        while True:
+            curentTime = time.localtime(time.time())
+            if 0 == curentTime.tm_hour and 15 == curentTime.tm_min and 0 == curentTime.tm_sec:
+                if self.isLogin():
+                    self.sign()
+                else:
+                    break
+            time.sleep(1)
