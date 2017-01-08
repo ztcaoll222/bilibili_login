@@ -77,8 +77,6 @@ if '__main__' == __name__:
                         fuck.p.start()
                     except ValueError as e:
                         print("输入错误!")
-                elif 5 == id:
-                    pass
 
         except ValueError as e:
             print("%s\n请输入数字!" % e)
