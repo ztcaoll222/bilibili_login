@@ -14,7 +14,6 @@ class fuck_bilibili():
         print("3.离开")
         if self.IsLogin:
             print("4.每天签到")
-            print("5.自动领瓜子")
 
     def __init__(self):
         self.session = requests.Session()
