@@ -6,5 +6,3 @@ bilibili模拟登陆 by Python 3
   2.cookies 登陆 √
   
   3.定时签到 √
-  
-  4.自动领瓜子 ×
