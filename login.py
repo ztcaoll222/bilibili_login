@@ -5,8 +5,17 @@ from PIL import Image
 import rsa
 import binascii
 from bs4 import BeautifulSoup
+import multiprocessing
 
 class fuck_bilibili():
+    def showIndex(self):
+        print("1.开始登陆")
+        print("2.重设帐户")
+        print("3.离开")
+        if self.IsLogin:
+            print("4.每天签到")
+            print("5.自动领瓜子")
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers = {
@@ -19,6 +28,10 @@ class fuck_bilibili():
         self.postdata = {}
         self.errorSum = 10
         self.userData = {}
+        self.IsLogin = 0
+        self.tm_hour = 0
+        self.tm_min = 0
+        self.tm_sec = 0
 
     def init(self):
         url = 'https://passport.bilibili.com/login'
@@ -259,11 +272,15 @@ class fuck_bilibili():
 
         if self.isLogin():
             print("欢迎 %s!" % self.userData['data']['uname'])
+            self.IsLogin = 1
+            self.p = multiprocessing.Process(target=self.Sign)
         else:
             if self.login():
                 self.getAccountInfo()
                 self.saveCooktes()
                 print("欢迎 %s!" % self.userData['data']['uname'])
+                self.IsLogin = 1
+                self.p = multiprocessing.Process(target=self.Sign)
             else:
                 return self.Login(isReSet)
 
@@ -282,14 +299,14 @@ class fuck_bilibili():
             s = s.replace('\t', '')
             data = json.loads(s)
             if 'OK' == data['msg']:
-                print("签到成功, %s" % data['data']['text'])
+                print("\n签到成功, %s" % data['data']['text'])
                 print(data['data']['specialText'])
             else:
-                print("签到失败, %s!" % data['msg'])
+                print("\n签到失败, %s!" % data['msg'])
         except requests.exceptions.ConnectionError as e:
             self.errorSum -= 1
             if self.errorSum:
-                print("%s\n无法连接 '%s', 重试..." % (e, url))
+                print("\n%s\n无法连接 '%s', 重试..." % (e, url))
                 time.sleep(1)
                 return self.init()
             else:
@@ -299,9 +316,11 @@ class fuck_bilibili():
     def Sign(self):
         while True:
             curentTime = time.localtime(time.time())
-            if 0 == curentTime.tm_hour and 15 == curentTime.tm_min and 0 == curentTime.tm_sec:
+            if self.tm_hour == curentTime.tm_hour and self.tm_min == curentTime.tm_min and self.tm_sec == curentTime.tm_sec:
                 if self.isLogin():
                     self.sign()
+                    self.showIndex()
+                    print("请输入: ")
                 else:
                     break
             time.sleep(1)
