@@ -34,15 +34,6 @@ BBBBB#S    .;. ;G,.1AMBBBMMMBMM#M&BBBHBBBMBBHBMBBB
 from login import fuck_bilibili
 import os
 import time
-import threading
-
-def showIndex(flag):
-    print("1.开始登陆")
-    print("2.重设帐户")
-    print("3.离开")
-    if flag:
-        print("4.每天签到")
-        print("5.自动领瓜子")
 
 if '__main__' == __name__:
     isLogin = 0
@@ -51,7 +42,7 @@ if '__main__' == __name__:
     fuck.init()
     print("初始化帐户成功!")
     while True:
-        showIndex(isLogin)
+        fuck.showIndex()
         try:
             id = int(input("请输入: "))
             os.system("cls")
@@ -66,15 +57,28 @@ if '__main__' == __name__:
                 isReSet = 1
             elif 3 == id:
                 print("再见 : )")
+                fuck.p.terminate()
+                fuck.p.join()
                 time.sleep(1)
                 os.system("cls")
                 exit(0)
 
             if isLogin:
                 if 4 == id:
-                    thread = threading.Thread(target=fuck.Sign(), name='sign_thread')
-                    thread.start()
+                    try:
+                        fuck.tm_hour, fuck.tm_min, fuck.tm_sec = input("请输入时间(时,分,秒, 以','隔开, 默认0,15,0): ").split(',')
+                        if '' == fuck.tm_hour:
+                            fuck.tm_hour = 0
+                        if '' == fuck.tm_min:
+                            fuck.tm_min = 15
+                        if '' == fuck.tm_sec:
+                            fuck.tm_sec = 0
+                        print("签到时间为每天的%s:%s:%s" % (fuck.tm_hour, fuck.tm_min, fuck.tm_sec))
+                        fuck.p.start()
+                    except ValueError as e:
+                        print("输入错误!")
                 elif 5 == id:
                     pass
+
         except ValueError as e:
             print("%s\n请输入数字!" % e)
