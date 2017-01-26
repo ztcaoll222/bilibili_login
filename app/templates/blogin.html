@@ -1,30 +1,23 @@
-<html>
-<head>
-    {% if title %}
-        <title>{{ title }} - demo</title>
-    {% else %}
-        <title>demo</title>
-    {% endif %}
-</head>
-<body>
-<div>
-    Demo:
-    <a href="/index">home</a>
-    <a href="/login">login</a>
-    <a href="/sigup">sigup</a>
-    <a href="/logout">logout</a>
-</div>
-<hr>
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+{% extends "base.html" %}
+
 {% block content %}
+    <h1>Sign in To BILIBILI</h1>
+    <form action="/blogin" method="post" name="blogin">
+        {{ form.hidden_tag() }}
+        <p>
+            Please enter your username:<br>
+            {{ form.username }}<br>
+            {% for error in form.errors.username %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </p>
+        <p>
+            Password:<br>
+            {{ form.password }}<br>
+            {% for error in form.errors.password %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </p>
+        <p><input type="submit" value="Sign in"></p>
+    </form>
 {% endblock %}
-</body>
-</html>

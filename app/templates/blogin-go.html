@@ -2,19 +2,15 @@
 
 {% block content %}
     <h1>Sign in To BILIBILI</h1>
-    <form action="/blogin" method="post" name="blogin">
+    <form action="/go" method="post" name="go">
         {{ form.hidden_tag() }}
         <p>
-            Please enter your username:<br>
-            {{ form.username }}<br>
-            {% for error in form.errors.username %}
-                <span style="color: red;">{{ error }}</span>
-            {% endfor %}
+            <img src="img/{{ username }}">
         </p>
         <p>
-            Password:<br>
-            {{ form.password }}<br>
-            {% for error in form.errors.password %}
+            Please enter verify code:<br>
+            {{ form.vercode }}<br>
+            {% for error in form.errors.vercode %}
                 <span style="color: red;">{{ error }}</span>
             {% endfor %}
         </p>

@@ -89,19 +89,21 @@ def login():
                                title='login in',
                                form=form)
 
-
     if form.validate_on_submit():
         username = form.username.data
         _password = str(form.password.data)
+        print(_password)
 
         cur = g.db.cursor()
-        cur.execute("SELECT password, salt0, salt1 FROM test0 WHERE username = %s" % username)
+        cur.execute("SELECT password, salt0, salt1 FROM test0 WHERE username = '%s'" % username)
         try:
             res = cur.fetchall()[0]
             password = res[0]
+            print(password)
             salt0 = res[1]
             salt1 = res[2]
             _password = md5Password(_password, salt0, salt1)[0]
+            print(_password)
             if password == _password:
                 flash('Login success')
                 session['isLogin'] = True
@@ -173,7 +175,6 @@ def go():
         return redirect('/index')
 
     if 'GET' == request.method:
-        flash('GET')
         if not fuck.getVerCode():
             flash('Can not get vercode image!')
             form = LoginForm()
