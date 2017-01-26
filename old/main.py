@@ -1,36 +1,3 @@
-'''
-天       若      有       情       天       亦       老
-                  ;53GHH&&X835r.
-               :18&HBBBBBMBBBBHX91:
-             r&M#MMM###MHAHHABM#@@#&5.
-            S##BBBMA951i,.,,,:is5XM##&;
-           3#MBBBB5               1BM#H:
-          5#MBBBBMG.               1BB#8
-          AMBBBBBMH,                XM#8
-          X#BBBBBMHS5sr:.    .,.... 9B@5
-          ;BMBBBBBMM315rrhi59Shr;:i1&@H,
-          ,BBBBBHMA8S1s9&HA85851;. hXGh
-          .&MBBBH9;    S@s Si      si ,
-           h#BBBB&hiir9HMi ,51si;i;; .
-           .AMBBMB3r:hHAHAsri:;i;,.  .
-            :AMBBM&HHAr::,     .;
-             3#BBM5r#MH835sii;,
-             ;#####h1H8r,...      .
-            sA&5h3XM9G5:      .: .,
-         :hX@Xi;   s3S95rshsshsi;,
-     ,18&B##M:rA9ss;,:1si8@HX3;,8B&G31;,
- ,1SGB##MMBMS. 1M#&1sr:,sSSi    G#M###MHX3hi,
-&B###MBBBBMM;   ,iii;i;rXG&X85. &MBBBBMM###MHX91;
-#BBBBBBBM#B9r51   ;sssi3M@MM#Ar 8#BBBBBBBBBMM###B&
-BBBBBBBM#Gi ;M&, ;;iir1r;5BMM:  sMBBBBBBBBBBBBBBMM
-BBBBBMMA1 s .AM9SSABMM#9.rHMM5   &MBBBBBBBBBBBBBBB
-BBBBBAH:  5; sM#BBHMBBB#GHMBMMS. 8#BBBBBBBBBBBBBBB
-BBBBBM8   ,1:,1HG9h&MBMB#MMMMM#&3S#MMMBBMBMMMMMMMB
-BBBBB#S    .;. ;G,.1AMBBBMMMBMM#M&BBBHBBBMBBHBMBBB
-我       为       长       者       续       一       秒
-前       排       膜       蛤，     不       出       bug
-'''
-
 from login import fuck_bilibili
 import os
 import time
