@@ -68,11 +68,9 @@ class fuck_bilibili():
     def getVerCode(self):
         url = 'https://passport.bilibili.com/captcha'
         filename = "./img/%s.jpg" % self.username
-        print(filename)
 
         try:
             verCodeRes = self.session.get(url)
-            print(verCodeRes.status_code)
             with open(filename, 'wb') as f:
                 f.write(verCodeRes.content)
         except:
@@ -126,6 +124,7 @@ class fuck_bilibili():
             flash(s)
             return False
         except requests.exceptions.ConnectionError as e:
+            flash(e)
             return False
         except:
             return True
