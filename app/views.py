@@ -163,7 +163,7 @@ def go():
 
     fuck = fuck_bilibili(username, password)
 
-    if session.get('mySession'):
+    if session.get('mySession') and 'POST' == request.method:
         fuck.session.cookies.update(json.loads(session['mySession']))
 
     session['mySession'] = json.dumps(fuck.session.cookies.get_dict())
