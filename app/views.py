@@ -2,7 +2,10 @@ import mysql.connector
 import string
 import random
 import hashlib
+import time
+import os
 from flask import render_template, flash, redirect, g, session, abort, request
+from random import randrange
 from app import app
 from app.forms import LoginForm, SigupForm, VerCode
 from login import fuck_bilibili
@@ -61,9 +64,10 @@ def sigup():
         if password0 == password1:
             password, salt0, salt1 = md5Password(password1)
             cur = g.db.cursor()
-            cur.execute("INSERT INTO test0 (username, password, salt0, salt1) VALUES ('%s', '%s', '%s', '%s')"
+            cur.execute("INSERT INTO user (username, password, salt0, salt1) VALUES ('%s', '%s', '%s', '%s')"
                                   % (username, password, salt0, salt1))
             g.db.commit()
+            cur.close()
             flash('sigup success')
             return redirect('/login')
         else:
@@ -89,9 +93,10 @@ def login():
         print(_password)
 
         cur = g.db.cursor()
-        cur.execute("SELECT password, salt0, salt1 FROM test0 WHERE username = '%s'" % username)
+        cur.execute("SELECT password, salt0, salt1 FROM user WHERE username = '%s'" % username)
         try:
             res = cur.fetchall()[0]
+            cur.close()
             password = res[0]
             salt0 = res[1]
             salt1 = res[2]
@@ -116,7 +121,6 @@ def logout():
     session.pop('mySession', None)
     session.pop('bisLogin', None)
     flash('Logout success!')
-    form = LoginForm()
     return redirect('login')
 
 @app.route('/blogin', methods=['GET', 'POST'])
@@ -141,7 +145,7 @@ def go_get():
         abort(401)
 
     try:
-        fuck = fuck_bilibili(session['username'], session['password'])
+        fuck = fuck_bilibili(session['username'])
     except:
         flash('Please enter your BILIBILI account and password!')
         return redirect('/blogin')
@@ -154,7 +158,7 @@ def go_get():
         fuck.initCookies()
         session['mySession'] = fuck.session.cookies.get_dict()
 
-    if not fuck.rsaEncrypt():
+    if not fuck.rsaEncrypt(session['password']):
         flash('Can not get the key!')
         return redirect('/blogin')
 
@@ -188,6 +192,16 @@ def go_post():
         if fuck.login(form.vercode.data) and fuck.isLogin():
             fuck.saveCookies()
             session['bisLogin'] = True
+
+            try:
+                cur = g.db.cursor()
+                cur.execute("INSERT INTO buser (b_user, isQiandao) VALUES ('%s', '%s')"
+                            % (session['username'], 0))
+                g.db.commit()
+                cur.close()
+            except:
+                flash("Username have exist!")
+
             flash('Welcome %s' % fuck.userData['data']['uname'])
         else:
             return redirect('/blogin')
@@ -204,4 +218,33 @@ def img(account):
 
 @app.route('/qiandao')
 def qiandao():
-    pass
+    cur = g.db.cursor()
+    curentTime = time.localtime(time.time())
+    if 0 == curentTime.tm_hour and 0 == curentTime.tm_min and 0 == curentTime.tm_sec:
+        cur.execute("UPDATE buser SET isQiandao = 0 WHERE isQiandao = 1")
+        g.db.commit()
+        cur.close()
+        flash("finish")
+        return redirect('/index')
+
+    cur.execute("SELECT b_user FROM buser WHERE isQiandao = 0")
+    try:
+        res = cur.fetchall()
+        num = randrange(0, len(res))
+        username = res[num][0]
+
+        fuck = fuck_bilibili(username)
+        fuck.loadCookies()
+        if not fuck.isLogin():
+            filename = "./cookies/%s.cookies" % username
+            os.remove(filename)
+            cur.execute("DELETE FROM buser WHERE b_user = '%s'" % username)
+        else:
+            fuck.qiandao()
+            cur.execute("UPDATE buser SET isQiandao = 1 WHERE b_user = '%s'" % username)
+        flash("finish")
+    except:
+        flash("all finish")
+    g.db.commit()
+    cur.close()
+    return redirect('/index')
