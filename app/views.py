@@ -2,7 +2,6 @@ import mysql.connector
 import string
 import random
 import hashlib
-import json
 from flask import render_template, flash, redirect, g, session, abort, request
 from app import app
 from app.forms import LoginForm, SigupForm, VerCode
@@ -51,10 +50,7 @@ def sigup():
 
     if session.get('isLogin'):
         flash('You have login!')
-        form = LoginForm()
-        return render_template('blogin.html',
-                               title='login in',
-                               form=form)
+        return redirect('/blogin')
 
     form = SigupForm()
     if form.validate_on_submit():
@@ -85,9 +81,7 @@ def login():
     form = LoginForm()
     if session.get('isLogin'):
         flash('You have login!')
-        return render_template('blogin.html',
-                               title='login in',
-                               form=form)
+        return redirect('/blogin')
 
     if form.validate_on_submit():
         username = form.username.data
@@ -99,18 +93,13 @@ def login():
         try:
             res = cur.fetchall()[0]
             password = res[0]
-            print(password)
             salt0 = res[1]
             salt1 = res[2]
             _password = md5Password(_password, salt0, salt1)[0]
-            print(_password)
             if password == _password:
                 flash('Login success')
                 session['isLogin'] = True
-                form = LoginForm()
-                return render_template('blogin.html',
-                                       title = 'login in',
-                                       form = form)
+                return redirect('/blogin')
             else:
                 flash('Bad username or password')
         except:
@@ -130,7 +119,7 @@ def logout():
     form = LoginForm()
     return redirect('login')
 
-@app.route('/blogin', methods=['POST'])
+@app.route('/blogin', methods=['GET', 'POST'])
 def blogin():
     if not session.get('isLogin'):
         abort(401)
@@ -146,63 +135,64 @@ def blogin():
                            title='Sign in',
                            form=form)
 
-@app.route('/go', methods=['GET', 'POST'])
-def go():
+@app.route('/go', methods=['GET'])
+def go_get():
     if not session.get('isLogin'):
         abort(401)
 
     try:
-        username = session['username']
-        password = session['password']
+        fuck = fuck_bilibili(session['username'], session['password'])
     except:
         flash('Please enter your BILIBILI account and password!')
-        form = LoginForm()
-        return render_template('blogin.html',
-                               title='Sign in',
-                               form=form)
-
-    fuck = fuck_bilibili(username, password)
-
-    if session.get('mySession') and 'POST' == request.method:
-        fuck.session.cookies.update(json.loads(session['mySession']))
-
-    session['mySession'] = json.dumps(fuck.session.cookies.get_dict())
+        return redirect('/blogin')
 
     if fuck.loadCookies() and fuck.isLogin():
-        fuck.getAccountInfo()
-        flash(fuck.userData['data']['uname'])
+        flash('Welcome %s' % fuck.userData['data']['uname'])
         session['bisLogin'] = True
         return redirect('/index')
+    else:
+        fuck.initCookies()
+        session['mySession'] = fuck.session.cookies.get_dict()
 
-    if 'GET' == request.method:
-        if not fuck.getVerCode():
-            flash('Can not get vercode image!')
-            form = LoginForm()
-            return render_template('blogin.html',
-                                   title='Sign in',
-                                   username=username,
-                                   form=form)
+    if not fuck.rsaEncrypt():
+        flash('Can not get the key!')
+        return redirect('/blogin')
+
+    session['password'] = fuck.password
+
+    if not fuck.getVerCode():
+        flash('Can not get verify image!')
+        return redirect('/blogin')
+
     form = VerCode()
-    if form.is_submitted():
-        vercode = form.vercode.data
-        fuck.vercode = vercode
-
-        if fuck.login() and fuck.isLogin():
-            fuck.saveCookies()
-            flash("Welcom %s" % fuck.userData['data']['uname'])
-            session['bisLogin'] = True
-            return redirect('/index')
-        else:
-            flash('Can not login success!')
-            form = LoginForm()
-            return render_template('blogin.html',
-                                   title='Sign in',
-                                   form=form)
-
     return render_template('blogin-go.html',
                            title='Sign in',
-                           username=username,
+                           username=session['username'],
                            form=form)
+
+@app.route('/go', methods=['POST'])
+def go_post():
+    if not session.get('isLogin'):
+        abort(401)
+
+    try:
+        fuck = fuck_bilibili(session['username'], session['password'])
+    except:
+        flash('Please enter your BILIBILI account and password!')
+        return redirect('/blogin')
+
+    fuck.session.cookies.update(session['mySession'])
+
+    form = VerCode()
+    if form.is_submitted():
+        if fuck.login(form.vercode.data) and fuck.isLogin():
+            fuck.saveCookies()
+            session['bisLogin'] = True
+            flash('Welcome %s' % fuck.userData['data']['uname'])
+        else:
+            return redirect('/blogin')
+
+    return redirect('/index')
 
 @app.route('/img/<account>')
 def img(account):
@@ -211,3 +201,7 @@ def img(account):
         res = app.make_response(f.read())
     res.headers['Content-Type'] = 'image / jpeg'
     return res
+
+@app.route('/qiandao')
+def qiandao():
+    pass
