@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from flask import flash
 
 class fuck_bilibili():
-    def __init__(self, username, password):
+    def __init__(self, username, password = ''):
         self.session = requests.Session()
         self.session.headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0',
@@ -80,13 +80,13 @@ class fuck_bilibili():
 
         return True
 
-    def rsaEncrypt(self):
+    def rsaEncrypt(self, password):
         url = 'http://passport.bilibili.com/login?act=getkey'
 
         try:
             getKeyRes = self.session.get(url)
             token = json.loads(getKeyRes.content.decode('utf-8'))
-            pw = str(token['hash']+self.password).encode('utf-8')
+            pw = str(token['hash']+password).encode('utf-8')
 
             key = token['key']
             key = rsa.PublicKey.load_pkcs1_openssl_pem(key)
@@ -129,3 +129,6 @@ class fuck_bilibili():
         except:
             return True
 
+    def qiandao(self):
+        url = 'http://live.bilibili.com/sign/doSign'
+        self.session.get(url)
