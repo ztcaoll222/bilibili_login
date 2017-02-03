@@ -19,6 +19,7 @@ class fuck_bilibili():
         self.vercode = 0
         self.userData = {}
 
+    def initCookies(self):
         url = 'https://passport.bilibili.com/login'
         self.session.get(url)
 
@@ -55,6 +56,7 @@ class fuck_bilibili():
             self.userData = json.loads(s)
         except:
             return False
+
         return True
 
     def isLogin(self):
@@ -97,9 +99,7 @@ class fuck_bilibili():
         return True
 
 
-    def login(self):
-        if not self.rsaEncrypt():
-            return False
+    def login(self, vercode):
 
         url = 'https://passport.bilibili.com/login/dologin'
         data = {
@@ -108,7 +108,7 @@ class fuck_bilibili():
             'keeptime': '2592000',
             'userid': self.username,
             'pwd': self.password,
-            'vdcode': self.vercode
+            'vdcode': vercode
         }
 
         try:
