@@ -1,4 +1,4 @@
-[DEMO](https://ztcaoll222.cn:5000/) <-仅供测试用
+[DEMO](https://demo.ztcaoll222.cn) <-仅供测试用
 # bilibili_login
 bilibili模拟登陆 by Python 3
   
